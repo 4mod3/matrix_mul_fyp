@@ -41,11 +41,9 @@ logic [10:0] valid_shift_queue = '0;
 assign load_valid = valid_shift_queue[10];
 assign store_valid = valid_shift_queue[0];
 
-always_ff @( posedge clk ) begin : valid_queue
+always_ff @( posedge clk ) begin : valid_queue_in
     valid_shift_queue[10] <= valid_in;
-    for (genvar i = 0; i<10; i++) begin
-        valid_shift_queue[i] <= valid_shift_queue[i+1];
-    end
+    valid_shift_queue[9:0] <= valid_shift_queue[10:1];
 end
 
 // -----------------
