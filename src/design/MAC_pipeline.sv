@@ -55,12 +55,18 @@ logic [10:0] EAB_stg_1;
 logic [33:0] mult_out_stg_2 [8:0] = '{9{0}};
 logic [54 : 0] glue_logic_out_stg_1 [1:0] = '{2{0}};
 bit sign_stg_1;
+bit error_flag_stg_1 = 0;
 
 always_ff @( posedge clk ) begin : EAB_gen
-    EAB_stg_1 <= TA_in[62 -: 11] + TB_in[62 -: 11];
-    if(TA_in[62-:11] + TB_in[62-:11] > 11'b11111111111 && valid_in) begin
-      error_flag <= 1;
+    EAB_stg_1 <= TA_in[62 -: 11] + TB_in[62 -: 11] - 11'b01111111111;
+    if({0,TA_in[62 -: 11]} + {0,TB_in[62 -: 11]} < 11'b01111111111 || 
+        {0,TA_in[62-:11]} + {0,TB_in[62-:11]} > (12'b011111111111 + 12'b001111111111))begin
+        error_flag_stg_1 <= 1 & valid_in;
     end
+    else begin
+        error_flag_stg_1 <= 0;
+    end
+
     // pass sign
     sign_stg_1 <= TA_in[63] ^ TB_in[63];
 end
@@ -134,6 +140,7 @@ mult_gen_0 mult_18_Inst_AhBh (
 logic [88:0] mult_partial_result_stg_2 [7:0] = '{8{0}};
 bit sign_stg_2;
 logic [10:0] EAB_stg_2;
+bit error_flag_stg_2 = 0;
 
 always_ff @( posedge clk ) begin : glue_logic_stg_2
     mult_partial_result_stg_2[0][88 -: 55] <= glue_logic_out_stg_1[0];
@@ -146,6 +153,9 @@ always_ff @( posedge clk ) begin : glue_logic_stg_2
 
     //pass EAB
     EAB_stg_2 <= EAB_stg_1;
+    
+    //pass error
+    error_flag_stg_2 <= error_flag_stg_1;
 end
 
 always_ff @( posedge clk ) begin : mul_res_distru
@@ -186,6 +196,7 @@ logic [88:0] adder_tree_level_0_res [3:0];
 logic [88:0] adder_tree_level_0_reg [3:0];
 logic [10:0] EAB_stg_3;
 bit sign_stg_3;
+bit error_flag_stg_3 = 0;
 
 c_addsub_0 adder_0_0 (
   .A(mult_partial_result_stg_2[0]),  // input wire [88 : 0] A
@@ -223,6 +234,9 @@ always_ff @( posedge clk ) begin : adder_tree_level_0
 
     //pass EAB
     EAB_stg_3 <= EAB_stg_2;
+
+    //pass error
+    error_flag_stg_3 <= error_flag_stg_2;
 end
 
 // -----------------
@@ -234,6 +248,7 @@ logic [88:0] adder_tree_level_1_res[1:0];
 logic [88:0] adder_tree_level_1_reg[1:0];
 logic [10:0] EAB_stg_4;
 bit sign_stg_4;
+bit error_flag_stg_4 = 0;
 
 c_addsub_0 adder_1_0 (
   .A(adder_tree_level_0_reg[0]),  // input wire [88 : 0] A
@@ -255,6 +270,8 @@ always_ff @( posedge clk ) begin : adder_tree_level_1
     sign_stg_4 <= sign_stg_3;
     //pass EAB
     EAB_stg_4 <= EAB_stg_3;
+    //pass error
+    error_flag_stg_4 <= error_flag_stg_3;
 end
 
 // -----------------
@@ -270,6 +287,7 @@ logic signed [55:0] MC_signed;
 logic [10:0] exp_diff;
 logic [10:0] exp_larger_stg_5;
 bit shift_C_flag;
+bit error_flag_stg_5 = 0;
 
 // Read from stage_3
 // logic [63:0] C_in;
@@ -279,6 +297,10 @@ c_addsub_0 adder_2_0 (
   .B(adder_tree_level_1_reg[1]),  // input wire [88 : 0] B
   .S(adder_tree_level_2_res)  // output wire [88 : 0] S
 );
+
+always_ff @( posedge clk ) begin : error_passer
+    error_flag_stg_5 <= error_flag_stg_4;
+end
 
 always_ff @( posedge clk ) begin : recoder
     // recode MAB to 2'complement
@@ -291,10 +313,10 @@ always_ff @( posedge clk ) begin : recoder
 
     // recode MC to 2'complement
     if(C_in[63])begin
-        MC_signed <= {1'b1, 2'b110, ~C_in[51:0]} + 1'b1;
+        MC_signed <= {1'b1, 3'b110, ~C_in[51:0]} + 1'b1;
     end
     else begin
-        MC_signed <= {1'b0, 2'b01, C_in[51:0]};
+        MC_signed <= {1'b0, 3'b001, C_in[51:0]};
     end
     // MC_signed[34:0] <= '0;
 end
@@ -319,6 +341,7 @@ end
 logic signed [55:0] MC_signed_shifted;
 logic signed [55:0] MAB_signed_shifted;
 logic [10:0] exp_larger_stg_6;
+bit error_flag_stg_6 = 0;
 
 
 always_ff @( posedge clk ) begin : shift_handler
@@ -333,6 +356,8 @@ always_ff @( posedge clk ) begin : shift_handler
 
     //pass exp_larger
     exp_larger_stg_6 <= exp_larger_stg_5;
+    //pass error
+    error_flag_stg_6 <= error_flag_stg_5;
 end
 
 // -----------------
@@ -342,6 +367,7 @@ end
 logic signed [55:0] MAB_C_sum_signed_orign;
 logic signed [55:0] MAB_C_add_res;
 logic [10:0] exp_larger_stg_7;
+bit error_flag_stg_7 = 0;
 
 c_addsub_1 accumulate_adder (
   .A(MAB_signed_shifted),  // input wire [55 : 0] A
@@ -354,6 +380,8 @@ always_ff @( posedge clk ) begin : MAB_MC_adder
 
     //pass exp_larger
     exp_larger_stg_7 <= exp_larger_stg_6;
+    //pass error
+    error_flag_stg_7 <= error_flag_stg_6;
 end
 
 // -----------------
@@ -363,6 +391,7 @@ end
 logic [54:0] MAB_C_sum_unsigned_orign;
 bit MAB_C_sign_stg_8;
 logic [10:0] exp_larger_stg_8;
+bit error_flag_stg_8 = 0;
 
 always_ff @( posedge clk ) begin : reverse_recoder
     MAB_C_sign_stg_8 <= MAB_C_sum_signed_orign[55];
@@ -376,6 +405,8 @@ always_ff @( posedge clk ) begin : reverse_recoder
     
     //pass exp_larger
     exp_larger_stg_8 <= exp_larger_stg_7;
+    //pass error
+    error_flag_stg_8 <= error_flag_stg_7;
 end
 
 // -----------------
@@ -387,6 +418,7 @@ logic [54:0] MAB_C_sum_unsigned_orign_stg_9;
 logic [5:0] clz_times;
 logic [5:0] shift_times;
 bit MAB_C_sign_stg_9;
+bit error_flag_stg_9 = 0;
 
 CLZ clz_instant(
     .in({MAB_C_sum_unsigned_orign, 9'b1}),
@@ -400,6 +432,8 @@ always_ff @( posedge clk ) begin : clz_gen
 
     //pass sign
     MAB_C_sign_stg_9 <= MAB_C_sign_stg_8;
+    //pass error
+    error_flag_stg_9 <= error_flag_stg_8;
 end
 
 // -----------------
@@ -409,16 +443,18 @@ end
 logic [54:0] MAB_C_sum_unsigned_shifted;
 logic [10:0] EAB_C;
 bit MAB_C_sign_stg_10;
+bit error_flag_stg_10 = 0;
 
 always_ff @( posedge clk ) begin : MAB_C_shift
     MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_orign_stg_9 <<< shift_times;
 
-    if(exp_larger_stg_9 + 2'd2 < shift_times && valid_shift_queue[2])begin
+    if(exp_larger_stg_9 + 2'd2 < shift_times)begin
         // 负上溢
-        error_flag <= 1;
+        error_flag_stg_10 <= 1 & valid_shift_queue[2];
     end
     else begin
         EAB_C <= exp_larger_stg_9 + 2'd2 - shift_times;
+        error_flag_stg_10 <= error_flag_stg_9;
     end
 
     //pass sign
@@ -450,6 +486,9 @@ always_ff @( posedge clk ) begin : round
             res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + MAB_C_sum_unsigned_shifted[3];
         end
     end
+
+    //error output
+    error_flag <= error_flag_stg_10;
 end
 
 endmodule : MAC_pipeline

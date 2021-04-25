@@ -24,22 +24,52 @@ module mul_tb;
 
 parameter clk_period = 10;  
 reg clk;  
-logic [63:0] TA_in = 64'hBFFA000000000000;
-logic [63:0] TB_in = 64'h4004CCCCCCCCCCCD;
-logic [89:0] MAB_mul_res_signed = '0;
+logic valid_in = 1'b1;
+logic [63:0] TA_in = 64'h4025000000000000;
+logic [63:0] TB_in = 64'h4003800000000000;
+logic [63:0] TC = 64'h4003800000000000; //1.5
+
+logic [63:0] res_out;
+bit store_valid;
+bit load_valid;
 logic error_flag;
 
 MAC_pipeline mac_tb(
     .clk(clk),
+    .valid_in(valid_in),
+    .C_in(TC),
     .TA_in(TA_in),
     .TB_in(TB_in),
-    .MAB_mul_res_signed(MAB_mul_res_signed),
-    .error_flag(error_flag)
+    .res_out(res_out),
+    .error_flag(error_flag),
+    .load_valid(load_valid),
+    .store_valid(store_valid)
 );
+logic [10:0] temp;
+assign temp = TA_in[62 -: 11] + TB_in[62 -: 11];
 
 initial begin
     clk = 0; 
-    # 100;
+    # 10;
+    TA_in = '0;
+    TB_in = '0;
+    valid_in = 0;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
+    # 10;
     $stop;
 end
 
