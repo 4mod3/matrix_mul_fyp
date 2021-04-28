@@ -43,23 +43,25 @@ module load_AB
     // from the-previous
     input logic [D_WIDTH-1 : 0] data_A_FIFO_in,
     input logic valid_A_FIFO_in, // high-available(!almost_empty)
-    output logic RD_EN_A_FIFO_out,
+    // output logic RD_EN_A_FIFO_out,
+    output logic PASS_EN_A_FIFO_out,
     // to the-behind
-    output logic [D_WIDTH-1 : 0] data_A_FIFO_out,
+    // output logic [D_WIDTH-1 : 0] data_A_FIFO_out,
     // output logic valid_A_FIFO_out,
     // input logic RD_EN_A_FIFO_in,
-    output logic WR_EN_A_FIFO_out,
+    // output logic WR_EN_A_FIFO_out,
 
     // FIFOB port
     //from the-previous
     input logic [D_WIDTH-1 : 0] data_B_FIFO_in,
     input logic valid_B_FIFO_in,
-    output logic RD_EN_B_FIFO_out,
-    //from the-behind
-    output logic [D_WIDTH-1 : 0] data_B_FIFO_out,
+    // output logic RD_EN_B_FIFO_out,
+    output PASS_EN_B_FIFO_out,
+    // to the-behind
+    // output logic [D_WIDTH-1 : 0] data_B_FIFO_out,
     // output logic valid_B_FIFO_out,
     // input logic RD_EN_B_FIFO_in
-    output logic WR_EN_B_FIFO_out
+    // output logic WR_EN_B_FIFO_out
 );
 
 //-------------------------------------------------
@@ -120,7 +122,7 @@ always_ff @( posedge clk or posedge rst ) begin : load_A_stg_1
 end
 
 //stage 2
-assign RD_EN_A_FIFO_out = load_flag;
+assign PASS_EN_A_FIFO_out = load_flag;
 always_ff @( posedge clk or posedge rst ) begin : load_A_stg_1
     if(rst)begin
         load_flag_stg_2 <= 0;
@@ -151,8 +153,8 @@ always_ff @( posedge clk or posedge rst ) begin : load_A_stg_1
 end
 
 // stage 3
-assign WR_EN_A_FIFO_out = load_flag_stg_2;
-assign data_A_FIFO_out = data_A_stg_2;
+// assign WR_EN_A_FIFO_out = load_flag_stg_2;
+// assign data_A_FIFO_out = data_A_stg_2;
 
 assign WR_EN_RAM_A = load_flag_stg_2 ? WR_EN_RAM_A_reg : 0;
 
@@ -168,9 +170,9 @@ sdp_sram #(
     .waddr_i({load_valid_index, load_address}),
     .wdata_i(data_A_stg_2),
     .rd_clk_i(clk),
-    .re_i(),
-    .raddr_i(),
-    .rdata_o()
+    .re_i(read_valid),
+    .raddr_i({~load_valid_index, pipe_out_index}),
+    .rdata_o(data_A_out)
 );
 
 always_comb begin : update_load_valid
@@ -190,12 +192,64 @@ always_comb begin : flush_block
     end
 end
 
+
 //-------------------------------------------------
-//  Pipe out A
+//  Pipe out A and Load B
 //-------------------------------------------------
 logic [PE_NUM_WIDTH-1 : 0] pipe_out_index = '0;
+logic [B_NUM_WIDTH-1 : 0] count_B = '0;
+logic [D_WIDTH-1 :0] data_B_stg_1 = '0;
+logic [D_WIDTH-1 :0] data_B_stg_2 = '0;
+logic load_valid_index_next;
+logic pipe_out_index_rst;
+logic count_B_ctl_from_valid;
 
+assign valid_AB_out = read_valid && B_valid_flag;
 
+always_ff @( posedge clk or posedge rst ) begin : index_block
+    if(rst)begin
+        pipe_out_index <= '0;
+    end else begin
+        if(read_valid)begin
+            pipe_out_index <= pipe_out_index + 1;
+        end else begin
+            pipe_out_index <= pipe_out_index;
+        end
+    end
+end
 
+always_comb begin : B_update_block
+    if((~pipe_out_index == 0) && (~count_B == 0))begin
+        read_valid_next = 0;
+        pipe_out_index_rst = ~load_valid;
+        count_B_ctl_from_valid = load_valid;
+    end else begin
+        read_valid_next = read_valid;
+        pipe_out_index_rst = 0;
+        count_B_ctl_from_valid = read_valid;
+    end
+
+    load_valid_index_next = pipe_out_index_rst?load_valid_index:(~load_valid_index);
+    PASS_EN_B_FIFO_out = valid_B_FIFO_in?count_B_ctl_from_valid:0;
+end
+
+always_ff @( posedge clk or posedge rst ) begin : B_control_block
+    if(rst)begin
+        count_B <= '0;
+    end else begin
+        if(PASS_EN_B_FIFO_out)begin
+            count_B <= count_B + 1;
+            B_valid <= 1'b1;
+        end else begin
+            count_B <= count_B;
+            B_valid <= 0;
+        end
+        load_valid_index <= load_valid_index_next;
+
+        data_B_stg_1 <= data_B_FIFO_in;
+        data_B_stg_2 <= data_B_stg_1;
+        data_B_out <= data_B_stg_2;
+    end
+end
 
 endmodule
