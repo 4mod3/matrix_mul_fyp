@@ -1,4 +1,4 @@
-    `timescale 1ns / 1ps
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -47,7 +47,7 @@ MAC_pipeline mac_tb(
 );
 
 initial begin
-    $dumpfile("wave.vcd");
+    $dumpfile("mac_wave.vcd");
     $dumpvars(0,mul_tb);
 end
 initial begin
