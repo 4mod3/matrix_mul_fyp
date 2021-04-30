@@ -23,6 +23,7 @@ logic B_rd_en;
 logic [63:0] A_MAC_in;
 logic [63:0] B_MAC_in;
 logic valid_MAC_in;
+logic WR_EN_B_FIFO_out;
 
 logic temp;
 assign temp = (~3'b111 == '0);
@@ -54,7 +55,7 @@ sync_fifo #(
     .FIFO_LEN(16),
     .DATA_WTH(64),
     .ADDR_WTH(4),
-    .EMPTY_ASSERT_VALUE(1)
+    .EMPTY_ASSERT_VALUE(0)
 ) fifo_A_inst (
     .clk_i(clk),
     .rst_i(rst),
@@ -69,7 +70,7 @@ sync_fifo #(
     .FIFO_LEN(16),
     .DATA_WTH(64),
     .ADDR_WTH(4),
-    .EMPTY_ASSERT_VALUE(1)
+    .EMPTY_ASSERT_VALUE(0)
 ) fifo_B_inst (
     .clk_i(clk),
     .rst_i(rst),
@@ -85,7 +86,7 @@ load_AB #(
     .A_PART(4),
     .A_PART_WIDTH(2),
     .B_NUM_WIDTH(3),
-    .PID(0)
+    .PID(1)
 ) load_inst (
     .clk,
     .rst,

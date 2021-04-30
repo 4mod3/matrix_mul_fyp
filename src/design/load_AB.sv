@@ -60,7 +60,6 @@ module load_AB
     // output logic [D_WIDTH-1 : 0] data_B_FIFO_out,
     // output logic valid_B_FIFO_out,
     // input logic RD_EN_B_FIFO_in
-    // output logic WR_EN_B_FIFO_out
 );
 
 //-------------------------------------------------
@@ -205,15 +204,18 @@ logic load_valid_index_next;
 logic pipe_out_index_rst;
 logic count_B_ctl_from_valid;
 logic valid_AB_stg_1 = 0;
+logic count_B_ctl;
+logic halt_flag;
 // logic valid_AB_stg_2 = 0;
 
-// assign valid_AB_out = valid_AB_stg_1;
 
 always_ff @( posedge clk or posedge rst ) begin : index_block
     if(rst)begin
         pipe_out_index <= '0;
+        valid_AB_stg_1 <= '0;
+        valid_AB_out <= '0;
     end else begin
-        if(read_valid)begin
+        if(read_valid && !pipe_out_index_rst)begin
             pipe_out_index <= pipe_out_index + 1'b1;
         end else begin
             pipe_out_index <= pipe_out_index;
@@ -248,12 +250,14 @@ always_comb begin : B_update_block
             pipe_out_index_rst = ~load_valid;
             count_B_ctl_from_valid = load_valid;
             load_valid_index_next = load_valid?(~load_valid_index):load_valid_index;
+            halt_flag = (!load_valid) && read_valid;
         end else begin
             // update B only
             read_valid_next = read_valid;
             count_B_ctl_from_valid = read_valid;
             pipe_out_index_rst = 0;
             load_valid_index_next = load_valid_index;
+            halt_flag = 0;
         end
     end else begin
         // rolling
@@ -261,19 +265,23 @@ always_comb begin : B_update_block
         count_B_ctl_from_valid = 0;
         pipe_out_index_rst = 0;
         load_valid_index_next = (load_valid && (~read_valid))?(~load_valid_index):load_valid_index;
+        halt_flag = 0;
     end
     
-
     // load_valid_index_next = (pipe_out_index_rst && (~pipe_out_index == 0))?load_valid_index:(~load_valid_index);
-    PASS_EN_B_FIFO_out = valid_B_FIFO_in?count_B_ctl_from_valid:0;
+    count_B_ctl = valid_B_FIFO_in?count_B_ctl_from_valid:0;
 end
+
+assign PASS_EN_B_FIFO_out = halt_flag?1'b1:count_B_ctl;
 
 always_ff @( posedge clk or posedge rst ) begin : B_control_block
     if(rst)begin
         count_B <= '0;
+        data_B_stg_1 <= '0;
+        data_B_out <= '0;
     end else begin
-        count_B <= PASS_EN_B_FIFO_out?(count_B + 1):count_B;
-        if(PASS_EN_B_FIFO_out || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
+        count_B <= count_B_ctl?(count_B + 1):count_B;
+        if(count_B_ctl || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
             B_valid_flag <= 1'b1;
         end else begin
             B_valid_flag <= (~pipe_out_index == '0)?0:B_valid_flag;
