@@ -2,20 +2,25 @@
 
 module control_C #(
     parameter D_WIDTH = 64,
-    parameter A_PART_NUM_WTH = 1,
-    parameter B_NUM_WTH = 1,
+    parameter A_PART_NUM_WTH = 1, // Si/P
+    parameter B_NUM_WTH = 1, // Sj
     parameter  N_MAX_WTH = 32
 )(
     input logic clk,
     input logic rst,
     input wire load_pos_bit_in,
     input wire store_pos_bit_in,
-    input logic [63:0] wr_data_in,
-    output logic [63:0] rd_data_out,
+    input logic [D_WIDTH-1:0] wr_data_in,
+    output logic [D_WIDTH-1:0] rd_data_out,
     input logic [N_MAX_WTH-1 : 0] N_in,
 
-    // interface res_out
-    res_out.out res_out_ports
+    // write out ports
+    input logic res_clk,
+    input logic res_rd_en_out,
+    input logic [A_PART_NUM_WTH + B_NUM_WTH-1 : 0] res_rd_addr_out,
+    output logic [D_WIDTH-1 : 0] res_rd_data_out,
+    output logic output_trigger_out
+
 );
 
 localparam MEM_ADDR_WTH = A_PART_NUM_WTH + B_NUM_WTH;
@@ -120,11 +125,13 @@ reg [MEM_ADDR_WTH-1 : 0] load_addr = '0;
 reg [N_MAX_WTH-1 : 0] load_count = '0;
 reg load_index = 0;
 logic [D_WIDTH-1 : 0] ram_rd_data;
+logic zero_flag_stg_1;
+logic zero_flag_stg_2;
+logic load_index_stg_1;
+logic load_index_stg_2;
 // logic load_index_next;
 // logic [MEM_ADDR_WTH-1 : 0] load_addr_next;
 // logic [N_MAX_WTH-1 : 0] load_count_next;
-
-assign rd_data_out = (load_count == '0)?'0:ram_rd_data;
 
 // // load comb signal
 // always_comb begin : load_C_comb_block
@@ -157,15 +164,24 @@ always_ff @( posedge clk or posedge rst ) begin : load_C_block
                 load_index <= !load_index;
                 load_count <= '0;
             end else begin
-                load_index = load_index;
-                load_count = load_count + 1'b1;
+                load_index <= load_index;
+                load_count <= load_count + 1'b1;
             end
         end else begin
-            load_index = load_index;
-            load_count = load_count;
-    end
+            load_index <= load_index;
+            load_count <= load_count;
+        end
+
+        // delay zero-flag (without rst RAM)
+        zero_flag_stg_1 <= load_count == '0;
+        zero_flag_stg_2 <= zero_flag_stg_1;
+        // delay load_index
+        load_index_stg_1 <= load_index;
+        load_index_stg_2 <= load_index_stg_1;
     end
 end
+
+assign rd_data_out = zero_flag_stg_2?'0:ram_rd_data;
 
 // ---------------------------------------------------
 // Store C
@@ -221,19 +237,19 @@ end
 // ---------------------------------------------------
 // SRAM port distru
 // ---------------------------------------------------
-assign res_out_ports.output_trigger = store_index;
+assign output_trigger_out = store_index;
 
 always_comb begin : SRAM_port
     // load port
     rd_clk_i[load_index] = clk;
     re_i[load_index] = load_pos_bit_in;
     raddr_i[load_index] = load_addr;
-    ram_rd_data = rdata_o[load_index];
+    ram_rd_data = rdata_o[load_index_stg_2];
 
-    rd_clk_i[!load_index] = res_out_ports.clk;
-    re_i[!load_index] = res_out_ports.rd_en;
-    raddr_i[!load_index] = res_out_ports.rd_addr;
-    res_out_ports.rd_data = rdata_o[!load_index];
+    rd_clk_i[!load_index] = res_clk;
+    re_i[!load_index] = res_rd_en_out;
+    raddr_i[!load_index] = res_rd_addr_out;
+    res_rd_data_out = rdata_o[!load_index];
 
     // store port
     we_i[store_index] = store_pos_bit_in;
@@ -248,19 +264,19 @@ end
 
 endmodule
 
-interface res_out#(
-    parameter D_WIDTH = 64,
-    parameter ADDR_WTH = 2
-)(input logic clk);
-    logic rd_en;
-    logic [ADDR_WTH-1 : 0] rd_addr;
-    logic [D_WIDTH-1 : 0] rd_data;
-    logic output_trigger;
+// interface res_out#(
+//     parameter D_WIDTH = 64,
+//     parameter ADDR_WTH = 2
+// )(input logic clk);
+//     logic rd_en;
+//     logic [ADDR_WTH-1 : 0] rd_addr;
+//     logic [D_WIDTH-1 : 0] rd_data;
+//     logic output_trigger;
 
-    modport out (
-        input rd_en,
-        input rd_addr,
-        output rd_data,
-        output output_trigger
-    );
-endinterface //res_out
+//     modport out (
+//         input rd_en,
+//         input rd_addr,
+//         output rd_data,
+//         output output_trigger
+//     );
+// endinterface //res_out

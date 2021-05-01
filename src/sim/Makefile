@@ -9,7 +9,19 @@
 
 MAC_SRC = ./mul_tb_beh.sv ../design/MAC_pipeline_beh.sv ../design/CLZ.sv
 LOAD_SRC = ./load_tb.sv ../design/load_AB.sv ../../ip/sdp_sram.v ../../ip/sync_fifo.sv
+CONTROL_SRC = ./control_C_tb.sv ../design/control_C.sv ../../ip/sdp_sram.v
 # BUILD_DIR = ./build
+
+#---------------------------------------------------
+# control C behavioral sim
+control: control_C_wave.vcd
+	gtkwave ./control_C_wave.vcd
+
+control_C_wave.vcd: control_C_tb.out
+	vvp ./control_C_tb.out
+
+control_C_tb.out: $(CONTROL_SRC)
+	iverilog -g2012 -o ./control_C_tb.out $(CONTROL_SRC)
 
 #---------------------------------------------------
 # load_AB behavioral sim
@@ -35,7 +47,7 @@ mul_tb.out: $(MAC_SRC)
 
 #---------------------------------------------------
 clean:
-	rm -f mac_wave.vcd mul_tb.out load_tb.out load_wave.vcd
+	rm -f mac_wave.vcd mul_tb.out load_tb.out load_wave.vcd control_C_tb.out control_C_wave.vcd
 
 # vim:ft=make
 #
