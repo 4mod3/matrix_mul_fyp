@@ -28,8 +28,8 @@ module PE_unit #(
     input logic [N_MAX_WIDTH-1 : 0] N_in,
     // write out ports
     input logic res_clk,
-    input logic res_rd_en_out,
-    input logic [A_PART_WTH + B_NUM_WTH-1 : 0] res_rd_addr_out,
+    input logic res_rd_en_in,
+    input logic [A_PART_WTH + B_NUM_WTH-1 : 0] res_rd_addr_in,
     output logic [D_WIDTH-1 : 0] res_rd_data_out,
     output logic output_trigger_out
 );

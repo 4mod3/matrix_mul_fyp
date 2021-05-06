@@ -16,8 +16,8 @@ module control_C #(
 
     // write out ports
     input logic res_clk,
-    input logic res_rd_en_out,
-    input logic [A_PART_WIDTH + B_NUM_WIDTH-1 : 0] res_rd_addr_out,
+    input logic res_rd_en_in,
+    input logic [A_PART_WIDTH + B_NUM_WIDTH-1 : 0] res_rd_addr_in,
     output logic [D_WIDTH-1 : 0] res_rd_data_out,
     output logic output_trigger_out
 
@@ -247,8 +247,8 @@ always_comb begin : SRAM_port
     ram_rd_data = rdata_o[load_index_stg_2];
 
     rd_clk_i[!load_index] = res_clk;
-    re_i[!load_index] = res_rd_en_out;
-    raddr_i[!load_index] = res_rd_addr_out;
+    re_i[!load_index] = res_rd_en_in;
+    raddr_i[!load_index] = res_rd_addr_in;
     res_rd_data_out = rdata_o[!load_index];
 
     // store port
