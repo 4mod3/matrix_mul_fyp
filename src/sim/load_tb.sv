@@ -47,7 +47,7 @@ initial begin
 end
 
 initial begin
-    $dumpfile("load_wave.vcd");
+    $dumpfile("./build/load_wave.vcd");
     $dumpvars(0,load_tb);
 end
 

@@ -47,7 +47,7 @@ MAC_pipeline mac_tb(
 );
 
 initial begin
-    $dumpfile("mac_wave.vcd");
+    $dumpfile("./build/mac_wave.vcd");
     $dumpvars(0,mul_tb);
 end
 initial begin

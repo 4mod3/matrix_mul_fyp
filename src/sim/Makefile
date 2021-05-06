@@ -10,44 +10,44 @@
 MAC_SRC = ./mul_tb_beh.sv ../design/MAC_pipeline_beh.sv ../design/CLZ.sv
 LOAD_SRC = ./load_tb.sv ../design/load_AB.sv ../../ip/sdp_sram.v ../../ip/sync_fifo.sv
 CONTROL_SRC = ./control_C_tb.sv ../design/control_C.sv ../../ip/sdp_sram.v
-# BUILD_DIR = ./build
+BUILD_DIR = ./build
 
 #---------------------------------------------------
 # control C behavioral sim
 control: control_C_wave.vcd
-	gtkwave ./control_C_wave.vcd
+	gtkwave $(BUILD_DIR)/control_C_wave.vcd
 
 control_C_wave.vcd: control_C_tb.out
-	vvp ./control_C_tb.out
+	vvp $(BUILD_DIR)/control_C_tb.out
 
 control_C_tb.out: $(CONTROL_SRC)
-	iverilog -g2012 -o ./control_C_tb.out $(CONTROL_SRC)
+	iverilog -g2012 -o $(BUILD_DIR)/control_C_tb.out $(CONTROL_SRC)
 
 #---------------------------------------------------
 # load_AB behavioral sim
 load: load_wave.vcd
-	gtkwave load_wave.vcd
+	gtkwave $(BUILD_DIR)/load_wave.vcd
 
 load_wave.vcd: load_tb.out
-	vvp ./load_tb.out
+	vvp $(BUILD_DIR)/load_tb.out
 
 load_tb.out: $(LOAD_SRC)
-	iverilog -g2012 -o ./load_tb.out $(LOAD_SRC)
+	iverilog -g2012 -o $(BUILD_DIR)/load_tb.out $(LOAD_SRC)
 
 #---------------------------------------------------
 # MAC_pipeline behavioral sim
 mac: mac_wave.vcd
-	gtkwave mac_wave.vcd
+	gtkwave $(BUILD_DIR)/mac_wave.vcd
 
 mac_wave.vcd: mul_tb.out
-	vvp ./mul_tb.out
+	vvp $(BUILD_DIR)/mul_tb.out
 
 mul_tb.out: $(MAC_SRC)
-	iverilog -g2012 -o ./mul_tb.out $(MAC_SRC)	
+	iverilog -g2012 -o $(BUILD_DIR)/mul_tb.out $(MAC_SRC)	
 
 #---------------------------------------------------
 clean:
-	rm -f mac_wave.vcd mul_tb.out load_tb.out load_wave.vcd control_C_tb.out control_C_wave.vcd
+	rm -f $(BUILD_DIR)/*
 
 # vim:ft=make
 #

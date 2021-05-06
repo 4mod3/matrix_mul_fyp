@@ -24,7 +24,7 @@ control_C #(
 );
 
 initial begin
-    $dumpfile("control_C_wave.vcd");
+    $dumpfile("./build/control_C_wave.vcd");
     $dumpvars(0,control_C_tb);
 end
 integer j;
