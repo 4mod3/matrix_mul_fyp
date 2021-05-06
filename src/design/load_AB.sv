@@ -26,7 +26,7 @@ module load_AB
     parameter A_NUM_WIDTH = 1, // S_i width
     // parameter A_NUM = 1; // S_i
     parameter A_PART_WIDTH = 1, // S_i/P width
-    parameter A_PART = 1, // S_i/P
+    // parameter A_PART = 1, // S_i/P
     parameter B_NUM_WIDTH = 1, // S_j width
     // parameter B_NUM = 1; // S_j
     parameter PID = 0
@@ -61,6 +61,8 @@ module load_AB
     // output logic valid_B_FIFO_out,
     // input logic RD_EN_B_FIFO_in
 );
+
+localparam A_PART = (1<<A_PART_WIDTH);
 
 //-------------------------------------------------
 //  Load Valid Control

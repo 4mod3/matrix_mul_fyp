@@ -6,7 +6,7 @@ module PE_unit #(
     parameter A_PART_WIDTH = 1，
     parameter B_NUM_WIDTH = 1,
     parameter PID = 0,
-    parameter N_MAX_WTH = 32
+    parameter N_MAX_WIDTH = 32
 )(
     input logic clk,
     input logic rst,
@@ -25,7 +25,7 @@ module PE_unit #(
     output logic PASS_EN_B_PE_out,
 
     // N
-    input logic [N_MAX_WTH-1 : 0] N_in,
+    input logic [N_MAX_WIDTH-1 : 0] N_in,
     // write out ports
     input logic res_clk,
     input logic res_rd_en_out,
@@ -35,7 +35,6 @@ module PE_unit #(
 );
 
 localparam A_NUM = (1 << A_NUM_WIDTH);
-localparam A_PART_NUM = (1 << A_PART_WIDTH); // TODO: format the naming
 
 // FIFO - load AB
 logic valid_A_FIFO;
@@ -85,7 +84,6 @@ load_AB #(
     .D_WIDTH(D_WIDTH),
     .A_NUM_WIDTH(A_NUM_WIDTH),
     .A_PART_WIDTH(A_PART_WIDTH),
-    .A_PART(A_PART_NUM),
     .B_NUM_WIDTH(B_NUM_WIDTH),
     .PID(PID)
 ) load_AB_inst (
@@ -120,9 +118,9 @@ MAC_pipeline MAC_pipeline_inst(
 
 control_C #(
     .D_WIDTH(64),
-    .A_PART_NUM_WTH(A_PART_WIDTH),
-    .B_NUM_WTH(B_NUM_WIDTH),
-    .N_MAX_WTH(N_MAX_WTH)
+    .A_PART_WIDTH(A_PART_WIDTH),
+    .B_NUM_WIDTH(B_NUM_WIDTH),
+    .N_MAX_WIDTH(N_MAX_WIDTH)
 ) control_C_inst (
     .clk,
     .rst,

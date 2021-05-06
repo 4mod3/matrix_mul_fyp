@@ -2,9 +2,9 @@
 
 module control_C #(
     parameter D_WIDTH = 64,
-    parameter A_PART_NUM_WTH = 1, // Si/P
-    parameter B_NUM_WTH = 1, // Sj
-    parameter  N_MAX_WTH = 32
+    parameter A_PART_WIDTH = 1, // Si/P
+    parameter B_NUM_WIDTH = 1, // Sj
+    parameter N_MAX_WIDTH = 32
 )(
     input logic clk,
     input logic rst,
@@ -12,18 +12,18 @@ module control_C #(
     input wire store_pos_bit_in,
     input logic [D_WIDTH-1:0] wr_data_in,
     output logic [D_WIDTH-1:0] rd_data_out,
-    input logic [N_MAX_WTH-1 : 0] N_in,
+    input logic [N_MAX_WIDTH-1 : 0] N_in,
 
     // write out ports
     input logic res_clk,
     input logic res_rd_en_out,
-    input logic [A_PART_NUM_WTH + B_NUM_WTH-1 : 0] res_rd_addr_out,
+    input logic [A_PART_WIDTH + B_NUM_WIDTH-1 : 0] res_rd_addr_out,
     output logic [D_WIDTH-1 : 0] res_rd_data_out,
     output logic output_trigger_out
 
 );
 
-localparam MEM_ADDR_WTH = A_PART_NUM_WTH + B_NUM_WTH;
+localparam MEM_ADDR_WTH = A_PART_WIDTH + B_NUM_WIDTH;
 
 // // SRAM Inst 0
 // logic we_i_0;
@@ -122,7 +122,7 @@ sdp_sram #(
 // Load C
 // ---------------------------------------------------
 reg [MEM_ADDR_WTH-1 : 0] load_addr = '0;
-reg [N_MAX_WTH-1 : 0] load_count = '0;
+reg [N_MAX_WIDTH-1 : 0] load_count = '0;
 reg load_index = 0;
 logic [D_WIDTH-1 : 0] ram_rd_data;
 logic zero_flag_stg_1;
@@ -131,7 +131,7 @@ logic load_index_stg_1;
 logic load_index_stg_2;
 // logic load_index_next;
 // logic [MEM_ADDR_WTH-1 : 0] load_addr_next;
-// logic [N_MAX_WTH-1 : 0] load_count_next;
+// logic [N_MAX_WIDTH-1 : 0] load_count_next;
 
 // // load comb signal
 // always_comb begin : load_C_comb_block
@@ -187,12 +187,12 @@ assign rd_data_out = zero_flag_stg_2?'0:ram_rd_data;
 // Store C
 // ---------------------------------------------------
 reg [MEM_ADDR_WTH-1 : 0] store_addr = '0;
-reg [N_MAX_WTH-1 : 0] store_count = '0;
+reg [N_MAX_WIDTH-1 : 0] store_count = '0;
 reg store_index = 0;
 logic [D_WIDTH-1 : 0] ram_wr_data;
 // logic store_index_next;
 // logic [MEM_ADDR_WTH-1 : 0] store_addr_next;
-// logic [N_MAX_WTH-1 : 0] store_count_next;
+// logic [N_MAX_WIDTH-1 : 0] store_count_next;
 
 // // store comb signal
 // always_comb begin : store_C_comb_block
