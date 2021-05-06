@@ -132,9 +132,4 @@ control_C #(
     .*
 );
 
-always_ff @( posedge  ) begin : blockName
-    
-end
-
-
 endmodule
