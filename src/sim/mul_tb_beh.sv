@@ -23,11 +23,12 @@
 module mul_tb;
 
 parameter clk_period = 10;  
-reg clk;  
+reg clk; 
+reg rst;
 logic valid_in = 1'b1;
 logic [63:0] TA_in = 64'h4025000000000000;
 logic [63:0] TB_in = 64'h4003800000000000;
-logic [63:0] TC = 64'h4003800000000000; //1.5
+logic [63:0] TC; //1.5
 
 logic [63:0] res_out;
 bit store_valid;
@@ -36,6 +37,7 @@ logic error_flag;
 
 MAC_pipeline mac_tb(
     .clk(clk),
+    .rst(rst),
     .valid_in(valid_in),
     .C_in(TC),
     .TA_in(TA_in),
@@ -45,11 +47,14 @@ MAC_pipeline mac_tb(
     .load_valid(load_valid),
     .store_valid(store_valid)
 );
-logic [10:0] temp;
-assign temp = TA_in[62 -: 11] + TB_in[62 -: 11];
 
 initial begin
-    clk = 0; 
+    $dumpfile("./build/mac_wave.vcd");
+    $dumpvars(0,mul_tb);
+end
+initial begin
+    clk = 0;
+    rst = 0;
     # 10;
     TA_in = '0;
     TB_in = '0;
@@ -57,6 +62,7 @@ initial begin
     # 10;
     # 10;
     # 10;
+    TC = 64'h4003800000000000;
     # 10;
     # 10;
     # 10;
@@ -70,7 +76,7 @@ initial begin
     # 10;
     # 10;
     # 10;
-    $stop;
+    $finish;
 end
 
 
