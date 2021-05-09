@@ -3,7 +3,7 @@
 module PE_unit #(
     parameter D_WIDTH = 64,
     parameter A_NUM_WIDTH = 1,
-    parameter A_PART_WIDTH = 1，
+    parameter A_PART_WIDTH = 1,
     parameter B_NUM_WIDTH = 1,
     parameter PID = 0,
     parameter N_MAX_WIDTH = 32
@@ -29,7 +29,7 @@ module PE_unit #(
     // write out ports
     input logic res_clk,
     input logic res_rd_en_in,
-    input logic [A_PART_WTH + B_NUM_WTH-1 : 0] res_rd_addr_in,
+    input logic [A_PART_WIDTH + B_NUM_WIDTH-1 : 0] res_rd_addr_in,
     output logic [D_WIDTH-1 : 0] res_rd_data_out,
     output logic output_trigger_out
 );
@@ -53,9 +53,10 @@ logic [D_WIDTH-1 : 0] store_data;
 logic [D_WIDTH-1 : 0] load_data;
 
 sync_fifo #(
-    .FIFO(2*A_NUM),
+    .FIFO_LEN((A_NUM<<8)),
     .DATA_WTH(D_WIDTH),
-    .ADDR_WTH(A_NUM_WIDTH+1)  
+    .ADDR_WTH(A_NUM_WIDTH+8),
+    .EMPTY_NEGATE_VALUE(1)
 ) fifo_A_inst (
     .clk_i(clk),
     .rst_i(rst),
@@ -67,9 +68,10 @@ sync_fifo #(
 );
 
 sync_fifo #(
-    .FIFO(2*A_NUM),
+    .FIFO_LEN((A_NUM<<8)),
     .DATA_WTH(D_WIDTH),
-    .ADDR_WTH(A_NUM_WIDTH+1)  
+    .ADDR_WTH(A_NUM_WIDTH+8),
+    .EMPTY_NEGATE_VALUE(1)
 ) fifo_B_inst (
     .clk_i(clk),
     .rst_i(rst),
@@ -98,13 +100,14 @@ load_AB #(
     .PASS_EN_A_FIFO_out(PASS_EN_A_PE_out),
 
     .data_B_FIFO_in(data_B_PE_out),
-    .valid_B_FIFO_in(valid_B_FIFO),
-    .PASS_EN_B_FIFO_out(PASS_EN_B_PE_out),
+    .valid_B_FIFO_in(~valid_B_FIFO),
+    .PASS_EN_B_FIFO_out(PASS_EN_B_PE_out)
 );
 
 // 64 bit floating-point MAC
 MAC_pipeline MAC_pipeline_inst(
     .clk,
+    .rst,
     .valid_in(valid_AB_load_out),
     .TA_in(data_A_load_out),
     .TB_in(data_B_load_out),

@@ -283,7 +283,7 @@ always_ff @( posedge clk or posedge rst ) begin : B_control_block
         data_B_out <= '0;
     end else begin
         count_B <= count_B_ctl?(count_B + 1):count_B;
-        if(count_B_ctl || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
+        if(count_B_ctl_from_valid || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
             B_valid_flag <= 1'b1;
         end else begin
             B_valid_flag <= (~pipe_out_index == '0)?0:B_valid_flag;

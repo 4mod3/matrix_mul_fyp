@@ -13,8 +13,6 @@ module top #(
     input logic A_valid_in,
     input logic [D_WIDTH-1 : 0] B_in,
     input logic B_valid_in,
-
-    output logic full_flag_out,
     input logic [N_MAX_WIDTH-1 : 0] N_in
 );
 

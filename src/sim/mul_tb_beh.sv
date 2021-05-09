@@ -23,7 +23,8 @@
 module mul_tb;
 
 parameter clk_period = 10;  
-reg clk;  
+reg clk; 
+reg rst;
 logic valid_in = 1'b1;
 logic [63:0] TA_in = 64'h4025000000000000;
 logic [63:0] TB_in = 64'h4003800000000000;
@@ -36,6 +37,7 @@ logic error_flag;
 
 MAC_pipeline mac_tb(
     .clk(clk),
+    .rst(rst),
     .valid_in(valid_in),
     .C_in(TC),
     .TA_in(TA_in),
@@ -51,7 +53,8 @@ initial begin
     $dumpvars(0,mul_tb);
 end
 initial begin
-    clk = 0; 
+    clk = 0;
+    rst = 0;
     # 10;
     TA_in = '0;
     TB_in = '0;

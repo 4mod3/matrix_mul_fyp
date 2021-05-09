@@ -22,6 +22,7 @@
 
 module MAC_pipeline(
     input logic clk,
+    input logic rst,
     input bit valid_in,
     input logic [63:0] TA_in,
     input logic [63:0] TB_in,
@@ -41,9 +42,13 @@ logic [10:0] valid_shift_queue = '0;
 assign load_valid = valid_shift_queue[10];
 assign store_valid = valid_shift_queue[0];
 
-always_ff @( posedge clk ) begin : valid_queue_in
-    valid_shift_queue[10] <= valid_in;
-    valid_shift_queue[9:0] <= valid_shift_queue[10:1];
+always_ff @( posedge clk or posedge rst) begin : valid_queue_in
+    if(rst)begin
+        valid_shift_queue <= '0;
+    end else begin
+        valid_shift_queue[10] <= valid_in;
+        valid_shift_queue[9:0] <= valid_shift_queue[10:1];
+    end
 end
 
 // -----------------

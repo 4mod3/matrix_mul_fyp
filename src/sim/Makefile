@@ -7,10 +7,24 @@
 # VIVADO_DIR = /home/gins/fpga/vivado_lib/2020.1/data/verilog/src
 # VIVADO_LIB = -y$(VIVADO_DIR) -y$(VIVADO_DIR)/retarget -y$(VIVADO_DIR)/unifast -y$(VIVADO_DIR)/unimacro -y$(VIVADO_DIR)/unisims -y$(VIVADO_DIR)/xeclib
 
-MAC_SRC = ./mul_tb_beh.sv ../design/MAC_pipeline_beh.sv ../design/CLZ.sv
-LOAD_SRC = ./load_tb.sv ../design/load_AB.sv ../../ip/sdp_sram.v ../../ip/sync_fifo.sv
-CONTROL_SRC = ./control_C_tb.sv ../design/control_C.sv ../../ip/sdp_sram.v
-BUILD_DIR = ./build
+MEM_SRC := $(wildcard ../../ip/*)
+MAC_SRC := ./mul_tb_beh.sv ../design/MAC_pipeline_beh.sv ../design/CLZ.sv
+LOAD_SRC := ./load_tb.sv ../design/load_AB.sv $(MEM_SRC)
+CONTROL_SRC := ./control_C_tb.sv ../design/control_C.sv ../../ip/sdp_sram.v
+TOP_SRC := ./top_tb.sv $(wildcard ../design/*.sv) $(MEM_SRC)
+TOP_SRC := $(filter-out ../design/MAC_pipeline.sv ../design/load_valid_control.sv, $(TOP_SRC))
+BUILD_DIR := ./build
+
+#---------------------------------------------------
+# top behavioral sim
+top: top_wave.vcd
+	gtkwave $(BUILD_DIR)/top_wave.vcd
+
+top_wave.vcd: top_tb.out
+	vvp $(BUILD_DIR)/top_tb.out
+
+top_tb.out: $(TOP_SRC)
+	iverilog -g2012 -o $(BUILD_DIR)/top_tb.out $(TOP_SRC)
 
 #---------------------------------------------------
 # control C behavioral sim
