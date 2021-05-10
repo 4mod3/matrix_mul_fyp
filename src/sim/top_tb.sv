@@ -12,19 +12,19 @@ task automatic rst_task(input [15:0] rst_times);
     rst = 0;
 endtask //rst_task
 
-parameter PE_NUM_WIDTH = 1;
+parameter PE_NUM_WIDTH = 2;
 parameter A_NUM_WIDTH = 3;
 parameter B_NUM_WIDTH = 3;
+parameter N = 16;
 parameter N_MAX_WIDTH = 32;
 parameter PE = (1<<PE_NUM_WIDTH);
 parameter Si = (1<<A_NUM_WIDTH);
 parameter Sj = (1<<B_NUM_WIDTH);
-parameter N = 16;
 
 // 16x16 matrix
 logic full_flag;
 logic [N_MAX_WIDTH-1:0] N_in;
-logic [63:0] matrix_tuple [31:0] [15:0];
+logic [63:0] matrix_tuple [2*N-1:0] [N-1:0];
 logic [63:0] A;
 logic [63:0] B;
 logic A_valid;

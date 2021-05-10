@@ -27,9 +27,10 @@ from numpy.random import default_rng
 
 #----------------------------------------------------------------------
 # random examples in [0.0, 1.0]
+mat_size = 16
 rng = default_rng(123)
-A = rng.random(size=(16, 16), dtype=np.float64)
-B = rng.random(size=(16, 16), dtype=np.float64)
+A = rng.random(size=(mat_size, mat_size), dtype=np.float64)
+B = rng.random(size=(mat_size, mat_size), dtype=np.float64)
 C = A @ B
 A.dtype = np.uint64
 B.dtype = np.uint64
@@ -44,8 +45,8 @@ format2str = np.vectorize(lambda num: '{:064b}'.format(num))
 A_str = format2str(A)
 B_str = format2str(B)
 C_str = format2str(C)
-# np.array([A, B]).tofile('./src/sim/AB.out', sep='\n', format='%016X')
-T = np.arange(1, 32*16+1, dtype=np.uint64).reshape(32, 16)
-T.tofile('./src/sim/AB.out', sep='\n', format='%016X')
+np.array([A, B]).tofile('./src/sim/AB.out', sep='\n', format='%016X')
+# T = np.arange(1, mat_size*2*mat_size+1, dtype=np.uint64).reshape(mat_size*2, mat_size)
+# T.tofile('./src/sim/AB.out', sep='\n', format='%016X')
 C.tofile('./src/sim/C.out', sep='\n', format='%016X')
 

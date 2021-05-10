@@ -26,8 +26,8 @@ parameter clk_period = 10;
 reg clk; 
 reg rst;
 logic valid_in = 1'b1;
-logic [63:0] TA_in = 64'h4025000000000000;
-logic [63:0] TB_in = 64'h4003800000000000;
+logic [63:0] TA_in = 64'h3FE9CA9149367F4D;
+logic [63:0] TB_in = 64'h3FE5D5D393207E7D;
 logic [63:0] TC; //1.5
 
 logic [63:0] res_out;
@@ -62,7 +62,7 @@ initial begin
     # 10;
     # 10;
     # 10;
-    TC = 64'h4003800000000000;
+    TC = 64'h3FDB193F1AFF30D7;
     # 10;
     # 10;
     # 10;

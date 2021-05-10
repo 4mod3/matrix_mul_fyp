@@ -54,6 +54,7 @@ module load_AB
     //from the-previous
     input logic [D_WIDTH-1 : 0] data_B_FIFO_in,
     input logic valid_B_FIFO_in,
+    input logic empty_B_FIFO_in,
     // output logic RD_EN_B_FIFO_out,
     output logic PASS_EN_B_FIFO_out
     // to the-behind
@@ -170,7 +171,7 @@ sdp_sram #(
     .waddr_i({load_valid_index, load_address}),
     .wdata_i(data_A_stg_2),
     .rd_clk_i(clk),
-    .re_i(read_valid),
+    .re_i(read_valid && !empty_B_FIFO_in),
     .raddr_i({~load_valid_index, pipe_out_index}),
     .rdata_o(data_A_out)
 );
@@ -208,6 +209,7 @@ logic count_B_ctl_from_valid;
 logic valid_AB_stg_1 = 0;
 logic count_B_ctl;
 logic halt_flag;
+// logic start_flag;
 // logic valid_AB_stg_2 = 0;
 
 
@@ -217,13 +219,14 @@ always_ff @( posedge clk or posedge rst ) begin : index_block
         valid_AB_stg_1 <= '0;
         valid_AB_out <= '0;
     end else begin
-        if(read_valid && !pipe_out_index_rst)begin
+        if(read_valid && (!empty_B_FIFO_in) && (!pipe_out_index_rst))begin
             pipe_out_index <= pipe_out_index + 1'b1;
         end else begin
             pipe_out_index <= pipe_out_index;
         end
 
-        valid_AB_stg_1 <= read_valid && B_valid_flag;
+        valid_AB_stg_1 <= read_valid && !empty_B_FIFO_in;
+        // valid_AB_stg_1 <= (~pipe_out_index == '0)?(read_valid && !empty_B_FIFO_in):valid_AB_stg_1;
         // valid_AB_stg_2 <= valid_AB_stg_1;
         valid_AB_out <= valid_AB_stg_1;
     end
@@ -271,9 +274,10 @@ always_comb begin : B_update_block
     end
     
     // load_valid_index_next = (pipe_out_index_rst && (~pipe_out_index == 0))?load_valid_index:(~load_valid_index);
-    count_B_ctl = valid_B_FIFO_in?count_B_ctl_from_valid:0;
+    count_B_ctl = (!empty_B_FIFO_in)?count_B_ctl_from_valid:0;
 end
 
+// assign PASS_EN_B_FIFO_out = halt_flag?1'b1:(B_valid_flag?count_B_ctl:0);
 assign PASS_EN_B_FIFO_out = halt_flag?1'b1:count_B_ctl;
 
 always_ff @( posedge clk or posedge rst ) begin : B_control_block
@@ -283,7 +287,7 @@ always_ff @( posedge clk or posedge rst ) begin : B_control_block
         data_B_out <= '0;
     end else begin
         count_B <= count_B_ctl?(count_B + 1):count_B;
-        if(count_B_ctl_from_valid || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
+        if(count_B_ctl || (valid_B_FIFO_in && load_valid && (~read_valid)))begin
             B_valid_flag <= 1'b1;
         end else begin
             B_valid_flag <= (~pipe_out_index == '0)?0:B_valid_flag;
