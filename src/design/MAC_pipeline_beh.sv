@@ -39,7 +39,7 @@ module MAC_pipeline(
 // totally 11 stages
 // -----------------
 logic [10:0] valid_shift_queue = '0;
-assign load_valid = valid_shift_queue[10];
+assign load_valid = valid_shift_queue[9];
 assign store_valid = valid_shift_queue[0];
 
 always_ff @( posedge clk or posedge rst) begin : valid_queue_in
@@ -504,14 +504,14 @@ always_ff @( posedge clk ) begin : round
     end
     else begin
         res_out[62 -: 11] <= EAB_C;
-        if(MAB_C_sum_unsigned_shifted[1:0] > 2'b10)begin
+        if(MAB_C_sum_unsigned_shifted[0] && MAB_C_sum_unsigned_shifted[1])begin
             res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + 1'b1;
         end
-        else if(MAB_C_sum_unsigned_shifted < 2'b10)begin
-            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52];
+        else if(MAB_C_sum_unsigned_shifted[1] && !MAB_C_sum_unsigned_shifted[0])begin
+            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + MAB_C_sum_unsigned_shifted[3];
         end
         else begin
-            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + MAB_C_sum_unsigned_shifted[3];
+            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52];
         end
     end
 
