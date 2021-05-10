@@ -39,6 +39,7 @@ localparam A_NUM = (1 << A_NUM_WIDTH);
 // FIFO - load AB
 logic valid_A_FIFO;
 logic valid_B_FIFO;
+logic empty_B_FIFO;
 
 // load AB - MAC pipeline
 logic [D_WIDTH-1 : 0] data_A_load_out;
@@ -79,7 +80,8 @@ sync_fifo #(
     .wr_en_i(PASS_EN_B_PE_in),
     .rd_data_o(data_B_PE_out),
     .rd_en_i(PASS_EN_B_PE_out),
-    .a_empty_o(valid_B_FIFO)
+    .a_empty_o(valid_B_FIFO),
+    .empty_o(empty_B_FIFO)
 );
 
 load_AB #(
@@ -101,6 +103,7 @@ load_AB #(
 
     .data_B_FIFO_in(data_B_PE_out),
     .valid_B_FIFO_in(~valid_B_FIFO),
+    .empty_B_FIFO_in(empty_B_FIFO),
     .PASS_EN_B_FIFO_out(PASS_EN_B_PE_out)
 );
 
