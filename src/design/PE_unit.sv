@@ -72,6 +72,7 @@ sync_fifo #(
     .FIFO_LEN((A_NUM<<8)),
     .DATA_WTH(D_WIDTH),
     .ADDR_WTH(A_NUM_WIDTH+8),
+    // .EMPTY_ASSERT_VALUE(1)
     .EMPTY_NEGATE_VALUE(1)
 ) fifo_B_inst (
     .clk_i(clk),
