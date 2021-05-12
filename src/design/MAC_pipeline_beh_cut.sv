@@ -306,9 +306,9 @@ end
 // -----------------
 
 logic [88:0] adder_tree_level_2_res;
-logic signed [90:0] MAB_mul_res_signed;
+logic signed [55:0] MAB_mul_res_signed;
 // C-relative registers
-logic signed [90:0] MC_signed;
+logic signed [55:0] MC_signed;
 logic [10:0] exp_diff;
 logic [10:0] exp_larger_stg_5;
 bit shift_C_flag;
@@ -332,20 +332,18 @@ end
 always_ff @( posedge clk ) begin : recoder
     // recode MAB to 2'complement
     if(sign_stg_4)begin
-        MAB_mul_res_signed <= {1'b1, 1'b1, ~adder_tree_level_2_res} + 1'b1;
+        MAB_mul_res_signed <= {1'b1, 1'b1, ~adder_tree_level_2_res[88 -: 54]} + 1'b1;
     end
     else begin
-        MAB_mul_res_signed <= {1'b0, 1'b0, adder_tree_level_2_res};
+        MAB_mul_res_signed <= {1'b0, 1'b0, adder_tree_level_2_res[88 -: 54]};
     end
 
     // recode MC to 2'complement
     if(C_in[63])begin
-        MC_signed[90 -: 56] <= {1'b1, 3'b110, ~C_in[51:0]} + 1'b1;
-        MC_signed[34:0] <= '0;
+        MC_signed <= {1'b1, 3'b110, ~C_in[51:0]} + 1'b1;
     end
     else begin
-        MC_signed[90 -: 56] <= {1'b0, 3'b001, C_in[51:0]};
-        MC_signed[34:0] <= '0;
+        MC_signed <= {1'b0, 3'b001, C_in[51:0]};
     end
     // MC_signed[34:0] <= '0;
 end
@@ -367,8 +365,8 @@ end
 // stage 6
 // Shift
 // -----------------
-logic signed [90:0] MC_signed_shifted;
-logic signed [90:0] MAB_signed_shifted;
+logic signed [55:0] MC_signed_shifted;
+logic signed [55:0] MAB_signed_shifted;
 logic [10:0] exp_larger_stg_6;
 bit error_flag_stg_6 = 0;
 
@@ -393,8 +391,8 @@ end
 // stage 7
 // Add MAB and MC
 // -----------------
-logic signed [90:0] MAB_C_sum_signed_orign;
-logic signed [90:0] MAB_C_add_res;
+logic signed [55:0] MAB_C_sum_signed_orign;
+logic signed [55:0] MAB_C_add_res;
 logic [10:0] exp_larger_stg_7;
 bit error_flag_stg_7 = 0;
 
@@ -418,19 +416,19 @@ end
 // stage 8
 // Recoding
 // -----------------
-logic [89:0] MAB_C_sum_unsigned_orign;
+logic [54:0] MAB_C_sum_unsigned_orign;
 bit MAB_C_sign_stg_8;
 logic [10:0] exp_larger_stg_8;
 bit error_flag_stg_8 = 0;
 
 always_ff @( posedge clk ) begin : reverse_recoder
-    MAB_C_sign_stg_8 <= MAB_C_sum_signed_orign[90];
+    MAB_C_sign_stg_8 <= MAB_C_sum_signed_orign[55];
     
-    if(MAB_C_sum_signed_orign[90])begin
-        MAB_C_sum_unsigned_orign <= ~MAB_C_sum_signed_orign[89:0] + 1'b1;
+    if(MAB_C_sum_signed_orign[55])begin
+        MAB_C_sum_unsigned_orign <= ~MAB_C_sum_signed_orign[54:0] + 1'b1;
     end
     else begin
-        MAB_C_sum_unsigned_orign <= MAB_C_sum_signed_orign[89:0];
+        MAB_C_sum_unsigned_orign <= MAB_C_sum_signed_orign[54:0];
     end
     
     //pass exp_larger
@@ -444,14 +442,14 @@ end
 // Count leading zero
 // -----------------
 logic [10:0] exp_larger_stg_9;
-logic [89:0] MAB_C_sum_unsigned_orign_stg_9;
+logic [54:0] MAB_C_sum_unsigned_orign_stg_9;
 logic [5:0] clz_times;
 logic [5:0] shift_times;
 bit MAB_C_sign_stg_9;
 bit error_flag_stg_9 = 0;
 
 CLZ clz_instant(
-    .in({MAB_C_sum_unsigned_orign[89 -: 64]}),
+    .in({MAB_C_sum_unsigned_orign, 9'b1}),
     .out(clz_times)
 );
 
@@ -474,12 +472,9 @@ logic [54:0] MAB_C_sum_unsigned_shifted;
 logic [10:0] EAB_C;
 bit MAB_C_sign_stg_10;
 bit error_flag_stg_10 = 0;
-logic [89:0] MAB_C_sum_unsigned_shifted_full;
-
-assign MAB_C_sum_unsigned_shifted_full = MAB_C_sum_unsigned_orign_stg_9 <<< shift_times;
 
 always_ff @( posedge clk ) begin : MAB_C_shift
-    MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_shifted_full[89 -: 55];
+    MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_orign_stg_9 <<< shift_times;
 
     if(exp_larger_stg_9 + 2'd2 < shift_times)begin
         // 负上溢
