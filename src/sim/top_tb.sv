@@ -16,8 +16,8 @@ endtask //rst_task
 parameter PE_NUM_WIDTH = 2;
 parameter A_NUM_WIDTH = 3;
 parameter B_NUM_WIDTH = 3;
-parameter N = 16;
 parameter M = 16;
+parameter N = 16;
 parameter K = 16;
 parameter N_MAX_WIDTH = 32;
 parameter PE = (1<<PE_NUM_WIDTH);
@@ -27,8 +27,10 @@ parameter Sj = (1<<B_NUM_WIDTH);
 // 16x16 matrix
 logic full_flag;
 logic [N_MAX_WIDTH-1:0] N_in;
-logic [63:0] matrix_tuple [2*N-1:0] [N-1:0];
-logic [63:0] C [M][K];
+// logic [63:0] matrix_tuple [2*N-1:0] [N-1:0];
+logic [63:0] A_matrix_ [M-1:0] [N-1:0];
+logic [63:0] B_matrix_ [N-1:0] [K-1:0];
+logic [63:0] C [M-1:0][K-1:0];
 logic [63:0] A;
 logic [63:0] B;
 logic A_valid;
@@ -48,7 +50,8 @@ top #(
 
 int i, j, ii, jj, n;
 initial begin
-    $readmemh("./build/AB_16_16_16_10.out", matrix_tuple);
+    $readmemh("./build/A_16_16_10.out", A_matrix_);
+    $readmemh("./build/B_16_16_10.out", B_matrix_);
     clk = 0;
     rst = 0;
     A_valid = 0;
@@ -56,17 +59,17 @@ initial begin
     N_in = N;
     # CLK_PERIOD;
     rst_task(CLK_PERIOD);
-    for(i=0; i<N/Si; i++)begin
-        for(j=0; j<N/Sj; j++)begin
+    for(i=0; i<M/Si; i++)begin
+        for(j=0; j<K/Sj; j++)begin
             for(n=0; n<N; n++)begin
                 for(ii=0; ii<Si; ii++)begin
-                    A = matrix_tuple[i*Si+ii][n];
+                    A = A_matrix_[i*Si+ii][n];
                     A_valid = 1'b1;
                     #CLK_PERIOD;
                 end
                 A_valid = 0;
                 for(jj=0; jj<Sj; jj++)begin
-                    B = matrix_tuple[N+n][j*Sj+jj];
+                    B = B_matrix_[n][j*Sj+jj];
                     B_valid = 1'b1;
                     #CLK_PERIOD;
                 end
@@ -161,8 +164,8 @@ initial begin
                     #(CLK_PERIOD * 1.5);
                     for(int res_index_ = 0; res_index_ < Sj*Si/PE; res_index_++)begin
                         // $display("%b, %d", res_index_, Sj*Si/PE);
-                        // $display("%d, %d", res_row_*Si + 0*Si/PE + res_index_[0], res_col_*Sj + (res_index_>>1));
-                        C[res_row_*Si + 0*Si/PE + res_index_[0]][res_col_*Sj + (res_index_>>1)] = top.PE_gen_block[0].PE_inst.res_rd_data_out;
+                        // $display("PE 0: %d, %d", res_row_*Si + 0*Si/PE + res_index_[0], res_col_*Sj + (res_index_>>1));
+                        C[res_row_*Si + 0*Si/PE + res_index_[A_NUM_WIDTH-PE_NUM_WIDTH-1:0]][res_col_*Sj + (res_index_>>A_NUM_WIDTH-PE_NUM_WIDTH)] = top.PE_gen_block[0].PE_inst.res_rd_data_out;
                         #CLK_PERIOD;
                     end
                 end 
@@ -174,7 +177,8 @@ initial begin
                     wait(top.PE_gen_block[1].PE_inst.res_rd_en_in);
                     #(CLK_PERIOD * 1.5);
                     for(int res_index_ = 0; res_index_ < Sj*Si/PE; res_index_++)begin
-                        C[res_row_*Si + 1*Si/PE + res_index_[0]][res_col_*Sj + (res_index_>>1)] = top.PE_gen_block[1].PE_inst.res_rd_data_out;
+                        // $display("PE 1: %d, %d", res_row_*Si + 1*Si/PE + res_index_[0], res_col_*Sj + (res_index_>>1));
+                        C[res_row_*Si + 1*Si/PE + res_index_[A_NUM_WIDTH-PE_NUM_WIDTH-1:0]][res_col_*Sj + (res_index_>>A_NUM_WIDTH-PE_NUM_WIDTH)] = top.PE_gen_block[1].PE_inst.res_rd_data_out;
                         #CLK_PERIOD;
                     end
                 end
@@ -186,7 +190,7 @@ initial begin
                     wait(top.PE_gen_block[2].PE_inst.res_rd_en_in);
                     #(CLK_PERIOD * 1.5);
                     for(int res_index_ = 0; res_index_ < Sj*Si/PE; res_index_++)begin
-                        C[res_row_*Si + 2*Si/PE + res_index_[0]][res_col_*Sj + (res_index_>>1)] = top.PE_gen_block[2].PE_inst.res_rd_data_out;
+                        C[res_row_*Si + 2*Si/PE + res_index_[A_NUM_WIDTH-PE_NUM_WIDTH-1:0]][res_col_*Sj + (res_index_>>A_NUM_WIDTH-PE_NUM_WIDTH)] = top.PE_gen_block[2].PE_inst.res_rd_data_out;
                         #CLK_PERIOD;
                     end
                 end
@@ -198,14 +202,15 @@ initial begin
                     wait(top.PE_gen_block[3].PE_inst.res_rd_en_in);
                     #(CLK_PERIOD * 1.5);
                     for(int res_index_ = 0; res_index_ < Sj*Si/PE; res_index_++)begin
-                        C[res_row_*Si + 3*Si/PE + res_index_[0]][res_col_*Sj + (res_index_>>1)] = top.PE_gen_block[3].PE_inst.res_rd_data_out;
+                        C[res_row_*Si + 3*Si/PE + res_index_[A_NUM_WIDTH-PE_NUM_WIDTH-1:0]][res_col_*Sj + (res_index_>>A_NUM_WIDTH-PE_NUM_WIDTH)] = top.PE_gen_block[3].PE_inst.res_rd_data_out;
                         #CLK_PERIOD;
                     end
                 end
             end
         end
     join
-    $writememh("./build/C_res_16_16_16_10.out", C);
+    // $display(C[0][0]);
+    $writememh("./C_res_16_16_10.out", C);
 end
 
 initial begin

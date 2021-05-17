@@ -22,12 +22,12 @@ def fpn2IEEE754(num):
     buffer_.dtype = np.uint64
     return buffer_[0]
 
-mul_res_alpha = IEEE_floating_mul(0x3FE428785C24BE49, 0x3FD6D0ACE97DEEB8)
+mul_res_alpha = IEEE_floating_mul(0x3FF84A676BF3689F, 0x3FF5A70767C6F7A0)
 mul_res_beta = IEEE_floating_mul(0x3FE9CA9149367F4D, 0x3FEDAD51FCAE0917)
 print("mul_res_alpha: {:016X}".format(mul_res_alpha))
 print("mul_res_beta: {:016X}".format(mul_res_beta))
 
-print( "add_res: {:016X}".format(IEEE_floating_add(mul_res_alpha, 0x400CAAAF0718227B)))
+print( "add_res: {:016X}".format(IEEE_floating_add(mul_res_alpha, 0x402061177671B3EA)))
 print("{:016X}".format(fpn2IEEE754(3.8079068540181082)))
 
 # --------------------------------
@@ -68,3 +68,8 @@ print("{:016X}".format(fpn2IEEE754(3.8079068540181082)))
 # 13 : 400B44C452AC5FB5
 # 14 : 400CAAAF0718227C
 # 15 : 400E7697DE61C6B4
+
+# --------------------------------
+# FP64: 0x40247CFEE8D9C3DD
+# design: 0x40247CFEE8D9C3DC
+# R100: 1            0100011111001111111011101000110110011100001111011100-10101110100110001111111001101100000110011001100

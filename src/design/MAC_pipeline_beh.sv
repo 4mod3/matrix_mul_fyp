@@ -470,7 +470,7 @@ end
 // stage 10
 // Normalize
 // -----------------
-logic [54:0] MAB_C_sum_unsigned_shifted;
+logic [88:0] MAB_C_sum_unsigned_shifted;
 logic [10:0] EAB_C;
 bit MAB_C_sign_stg_10;
 bit error_flag_stg_10 = 0;
@@ -479,7 +479,8 @@ logic [89:0] MAB_C_sum_unsigned_shifted_full;
 assign MAB_C_sum_unsigned_shifted_full = MAB_C_sum_unsigned_orign_stg_9 <<< shift_times;
 
 always_ff @( posedge clk ) begin : MAB_C_shift
-    MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_shifted_full[89 -: 55];
+    // MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_shifted_full[89 -: 55];
+    MAB_C_sum_unsigned_shifted <= MAB_C_sum_unsigned_shifted_full[88:0];
 
     if(exp_larger_stg_9 + 2'd2 < shift_times)begin
         // 负上溢
@@ -503,20 +504,28 @@ always_ff @( posedge clk ) begin : round
 
     // round to the nestest, tie to even
     // handle overflow when round-add
-    if(MAB_C_sum_unsigned_shifted[53:1] == ~0)begin
+    if(MAB_C_sum_unsigned_shifted[88 -: 52] == ~0)begin
         res_out[62 -: 11] <= EAB_C + 1'b1;
         res_out[51:0] <= '0;
     end
     else begin
         res_out[62 -: 11] <= EAB_C;
-        if(MAB_C_sum_unsigned_shifted[0] && MAB_C_sum_unsigned_shifted[1])begin
-            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + 1'b1;
-        end
-        else if(MAB_C_sum_unsigned_shifted[1] && !MAB_C_sum_unsigned_shifted[0])begin
-            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + MAB_C_sum_unsigned_shifted[3];
-        end
-        else begin
-            res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52];
+        // if(MAB_C_sum_unsigned_shifted[0] && MAB_C_sum_unsigned_shifted[1])begin
+        //     res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52] + 1'b1;
+        // end
+        // else if(MAB_C_sum_unsigned_shifted[1] && !MAB_C_sum_unsigned_shifted[0])begin
+        //     res_out[51:0] <= {MAB_C_sum_unsigned_shifted[53 -: 51], 1'b0};
+        // end
+        // else begin
+        //     res_out[51:0] <= MAB_C_sum_unsigned_shifted[53 -: 52];
+        // end
+
+        if(MAB_C_sum_unsigned_shifted[36:0] > (1<<36))begin
+            res_out[51:0] <= MAB_C_sum_unsigned_shifted[88 -: 52] + 1'b1;
+        end else if(MAB_C_sum_unsigned_shifted[36:0] < (1<<36))begin
+            res_out[51:0] <= MAB_C_sum_unsigned_shifted[88 -: 52];
+        end else begin
+            res_out[51:0] <= {MAB_C_sum_unsigned_shifted[88 -: 51], 1'b0};
         end
     end
 
