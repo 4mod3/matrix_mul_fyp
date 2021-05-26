@@ -69,7 +69,7 @@ C_sep.dtype = np.uint64
 
 def rand_data_gen(seed, M, N, K):
     rng = default_rng(seed)
-    remapping =np.vectorize(lambda x: x)
+    remapping =np.vectorize(lambda x: (x-0.5)*20)
     A = remapping(rng.random(size=(M, N), dtype=np.float64))
     B = remapping(rng.random(size=(N, K), dtype=np.float64))
     C = A @ B
@@ -82,13 +82,14 @@ def rand_data_gen(seed, M, N, K):
     B.tofile("./src/sim/build/B_{:d}_{:d}_{:d}.out".format(N, K, seed), sep="\n", format='%016X')
     C.tofile('./src/sim/build/C_{:d}_{:d}_{:d}_{:d}.out'.format(M,N,K,seed), sep='\n', format='%016X')
 
-rand_data_gen(1, 16, 16, 16)
-rand_data_gen(2, 16, 16, 16)
-rand_data_gen(3, 16, 16, 16)
-rand_data_gen(4, 16, 16, 16)
-rand_data_gen(5, 16, 16, 16)
-rand_data_gen(6, 16, 16, 16)
-rand_data_gen(7, 16, 16, 16)
-rand_data_gen(8, 16, 16, 16)
-rand_data_gen(9, 16, 16, 16)
-rand_data_gen(10, 16, 16, 16)
+rand_data_gen(1000, 16, 16, 16)
+# rand_data_gen(1, 16, 16, 16)
+# rand_data_gen(2, 16, 16, 16)
+# rand_data_gen(3, 16, 16, 16)
+# rand_data_gen(4, 16, 16, 16)
+# rand_data_gen(5, 16, 16, 16)
+# rand_data_gen(6, 16, 16, 16)
+# rand_data_gen(7, 16, 16, 16)
+# rand_data_gen(8, 16, 16, 16)
+# rand_data_gen(9, 16, 16, 16)
+# rand_data_gen(10, 16, 16, 16)

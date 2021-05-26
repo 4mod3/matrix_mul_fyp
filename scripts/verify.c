@@ -50,7 +50,8 @@ int main()
 
     double AB_mul = A_fp*B_fp;
     double res = AB_mul + C_fp;
+    double res_fma = fma(A_fp, B_fp, C_fp);
 
-    printf( "%016lX" , *(unsigned long int*)&res );
+    printf( "%016lX\n%016lx" , *(unsigned long int*)&res, *(unsigned long int*)&res_fma );
 }
 

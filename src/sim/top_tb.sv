@@ -50,8 +50,8 @@ top #(
 
 int i, j, ii, jj, n;
 initial begin
-    $readmemh("./build/A_16_16_10.out", A_matrix_);
-    $readmemh("./build/B_16_16_10.out", B_matrix_);
+    $readmemh("./build/A_16_16_1000.out", A_matrix_);
+    $readmemh("./build/B_16_16_1000.out", B_matrix_);
     clk = 0;
     rst = 0;
     A_valid = 0;
@@ -210,7 +210,7 @@ initial begin
         end
     join
     // $display(C[0][0]);
-    $writememh("./C_res_16_16_10.out", C);
+    $writememh("./build/C_res_16_16_16_1000.out", C);
 end
 
 initial begin
